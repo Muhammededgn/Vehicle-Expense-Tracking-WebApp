@@ -1,0 +1,96 @@
+@page "/"
+@using VehicleExpenseTrackingWebApp.Data
+@using VehicleExpenseTrackingWebApp.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="page-home">
+    <PageTitle>Araç Masraf Takip</PageTitle>
+
+    <h1>Araç Masraf Takip</h1>
+
+    @if (yukleniyor)
+    {
+        <p>Yükleniyor...</p>
+    }
+    else if (araclar == null || !araclar.Any())
+    {
+        <p>Henüz araç eklenmemiþ.</p>
+        <p><a href="/arac-ekle">Ýlk aracýnýzý ekleyin</a></p>
+    }
+    else
+    {
+        <div class="arac-grid">
+            @foreach (var arac in araclar)
+            {
+                <div class="arac-card" @onclick="() => AracMasraflaraGit(arac.Id)">
+                    <div class="arac-card-header">
+                        <span class="plaka">@arac.Plaka</span>
+                    </div>
+                    <div class="arac-card-body">
+                        <p class="marka-model">@arac.Marka @arac.Model</p>
+                        <p class="yil">@arac.Yil</p>
+                    </div>
+                    <div class="arac-card-footer">
+                        <div class="stat">
+                            <span class="stat-label">Kilometre</span>
+                            <span class="stat-value">@GetSonKilometre(arac).ToString("N0") km</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Toplam Masraf</span>
+                            <span class="stat-value">@GetToplamMasraf(arac).ToString("N2") ?</span>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="arac-card add-card" @onclick="YeniAracEkle">
+                <div class="add-card-content">
+                    <span class="add-icon">+</span>
+                    <span class="add-text">Yeni Araç Ekle</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool yukleniyor = true;
+    private List<Arac>? araclar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        araclar = await DbContext.Araclar
+            .Include(a => a.Masraflar)
+            .ToListAsync();
+        yukleniyor = false;
+    }
+
+    private int GetSonKilometre(Arac arac)
+    {
+        var sonMasrafKm = arac.Masraflar
+            .Where(m => m.Kilometre.HasValue)
+            .OrderByDescending(m => m.Kilometre)
+            .Select(m => m.Kilometre!.Value)
+            .FirstOrDefault();
+        
+        return sonMasrafKm > 0 ? sonMasrafKm : arac.Kilometre;
+    }
+
+    private decimal GetToplamMasraf(Arac arac)
+    {
+        return arac.Masraflar.Sum(m => m.Tutar);
+    }
+
+    private void AracMasraflaraGit(int aracId)
+    {
+        Navigation.NavigateTo($"/arac-masraflar/{aracId}");
+    }
+
+    private void YeniAracEkle()
+    {
+        Navigation.NavigateTo("/arac-ekle");
+    }
+}

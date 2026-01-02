@@ -1,0 +1,247 @@
+@page "/araclar"
+@using VehicleExpenseTrackingWebApp.Data
+@using VehicleExpenseTrackingWebApp.Models
+@using VehicleExpenseTrackingWebApp.Services
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject AracSearchService SearchService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="page-araclar">
+    <PageTitle>Araçlar</PageTitle>
+
+    <div class="page-header">
+        <h1>Araçlar</h1>
+        <button class="btn-primary" @onclick="YeniAracEkle">+ Yeni Araç Ekle</button>
+    </div>
+
+    <div class="search-filter-container">
+        <div class="search-box">
+            <input type="text" 
+                   placeholder="Plaka, marka veya model ara..." 
+                   @bind="searchTerm" 
+                   @bind:event="oninput"
+                   @onkeyup="AramaYap" />
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Yakıt Tipi:</label>
+                <select @bind="selectedYakitTipi" @bind:after="FiltreleVeAra">
+                    <option value="">Tümü</option>
+                    @foreach (var tip in Enum.GetValues<YakitTipi>())
+                    {
+                        <option value="@tip">@tip</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Min Yıl:</label>
+                <input type="number" @bind="minYil" @bind:after="FiltreleVeAra" placeholder="Min" />
+            </div>
+
+            <div class="filter-group">
+                <label>Max Yıl:</label>
+                <input type="number" @bind="maxYil" @bind:after="FiltreleVeAra" placeholder="Max" />
+            </div>
+
+            <div class="filter-group">
+                <label>Min Masraf:</label>
+                <input type="number" @bind="minMasraf" @bind:after="FiltreleVeAra" placeholder="₺" />
+            </div>
+
+            <div class="filter-group">
+                <label>Max Masraf:</label>
+                <input type="number" @bind="maxMasraf" @bind:after="FiltreleVeAra" placeholder="₺" />
+            </div>
+
+            <button class="btn-secondary" @onclick="FiltreleriTemizle">Temizle</button>
+        </div>
+    </div>
+
+    @if (yukleniyor)
+    {
+        <p class="loading">Yükleniyor...</p>
+    }
+    else if (araclar == null || !araclar.Any())
+    {
+        <p class="no-data">Araç bulunamadı.</p>
+    }
+    else
+    {
+        <div class="data-grid-container">
+            <table class="data-grid">
+                <thead>
+                    <tr>
+                        <th>Plaka</th>
+                        <th>Marka</th>
+                        <th>Model</th>
+                        <th>Yıl</th>
+                        <th>Yakıt Tipi</th>
+                        <th>Son Kilometre</th>
+                        <th>Toplam Masraf</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var arac in araclar)
+                    {
+                        <tr @onclick="() => MasraflaraGit(arac.Id)" class="clickable-row">
+                            <td class="plaka-cell">@arac.Plaka</td>
+                            <td>@arac.Marka</td>
+                            <td>@arac.Model</td>
+                            <td>@arac.Yil</td>
+                            <td><span class="yakit-badge @arac.YakitTipi.ToString().ToLower()">@arac.YakitTipi</span></td>
+                            <td class="number-cell">@arac.SonKilometre.ToString("N0") km</td>
+                            <td class="number-cell">@arac.ToplamMasraf.ToString("N2") ₺</td>
+                            <td class="actions-cell">
+                                <button class="btn-action btn-edit" @onclick="() => Duzenle(arac.Id)" @onclick:stopPropagation="true">Düzenle</button>
+                                <button class="btn-action btn-expenses" @onclick="() => MasraflaraGit(arac.Id)" @onclick:stopPropagation="true">Masraflar</button>
+                                <button class="btn-action btn-delete" @onclick="() => SilOnay(arac)" @onclick:stopPropagation="true">Sil</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-bar">
+            <span>Toplam <strong>@araclar.Count</strong> araç | Toplam Masraf: <strong>@araclar.Sum(a => a.ToplamMasraf).ToString("N2") ₺</strong></span>
+        </div>
+    }
+
+</div>
+
+@if (silinecekArac != null)
+{
+    <div class="modal-overlay" @onclick="IptalSil">
+        <div class="confirmation-modal" @onclick:stopPropagation="true">
+            <h3>Aracı Sil</h3>
+            <p><strong>@silinecekArac.Plaka</strong> plakalı aracı silmek istediğinize emin misiniz?</p>
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="validation-message" style="margin-bottom: 1rem; font-weight: bold;">
+                    @errorMessage
+                </div>
+            }
+
+            <div class="modal-actions">
+                <button class="btn-danger" @onclick="Sil">Evet, Sil</button>
+                <button class="btn-secondary" @onclick="IptalSil">İptal</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<AracSearchResult>? araclar;
+    private bool yukleniyor = true;
+    private AracSearchResult? silinecekArac;
+    private string? errorMessage;
+
+    private string? searchTerm;
+    private string? selectedYakitTipi;
+    private int? minYil;
+    private int? maxYil;
+    private decimal? minMasraf;
+    private decimal? maxMasraf;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AramaYap();
+    }
+
+    private async Task AramaYap()
+    {
+        yukleniyor = true;
+        errorMessage = null;
+        
+        YakitTipi? yakitTipi = null;
+        if (!string.IsNullOrEmpty(selectedYakitTipi) && Enum.TryParse<YakitTipi>(selectedYakitTipi, out var parsed))
+        {
+            yakitTipi = parsed;
+        }
+
+        araclar = await SearchService.AraAsync(
+            searchTerm,
+            yakitTipi,
+            minYil,
+            maxYil,
+            minMasraf,
+            maxMasraf);
+
+        yukleniyor = false;
+    }
+
+    private async Task FiltreleVeAra()
+    {
+        await AramaYap();
+    }
+
+    private async Task FiltreleriTemizle()
+    {
+        searchTerm = null;
+        selectedYakitTipi = null;
+        minYil = null;
+        maxYil = null;
+        minMasraf = null;
+        maxMasraf = null;
+        await AramaYap();
+    }
+
+    private void YeniAracEkle()
+    {
+        Navigation.NavigateTo("/arac-ekle");
+    }
+
+    private void Duzenle(int id)
+    {
+        Navigation.NavigateTo($"/arac-duzenle/{id}");
+    }
+
+    private void MasraflaraGit(int id)
+    {
+        Navigation.NavigateTo($"/arac-masraflar/{id}");
+    }
+
+    private void SilOnay(AracSearchResult arac)
+    {
+        silinecekArac = arac;
+        errorMessage = null;
+    }
+
+    private void IptalSil()
+    {
+        silinecekArac = null;
+        errorMessage = null;
+    }
+
+    private async Task Sil()
+    {
+        try
+        {
+            if (silinecekArac != null)
+            {
+                var arac = await DbContext.Araclar
+                    .Include(a => a.Masraflar)
+                    .FirstOrDefaultAsync(a => a.Id == silinecekArac.Id);
+                    
+                if (arac != null)
+                {
+                    DbContext.Araclar.Remove(arac);
+                    await DbContext.SaveChangesAsync();
+                }
+                silinecekArac = null;
+                await AramaYap();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Silme işlemi yapılamadı. Muhtemelen bu araca bağlı kayıtlar var.";
+            Console.WriteLine($"Silme hatası: {ex.Message}");
+        }
+    }
+}

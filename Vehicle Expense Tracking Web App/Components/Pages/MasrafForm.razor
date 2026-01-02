@@ -1,0 +1,144 @@
+@page "/masraf-ekle/{AracId:int}"
+@page "/masraf-duzenle/{Id:int}"
+@using VehicleExpenseTrackingWebApp.Data
+@using VehicleExpenseTrackingWebApp.Models
+@using Microsoft.EntityFrameworkCore
+@using VehicleExpenseTrackingWebApp.Services
+@inject AppDbContext DbContext
+@inject NavigationManager Navigation
+@inject YakitTuketimiService YakitService
+@rendermode InteractiveServer
+
+<div class="page-masraf-form">
+    <PageTitle>@(Id == null ? "Yeni Masraf" : "Masraf Düzenle")</PageTitle>
+
+    <h1>@(Id == null ? "Yeni Masraf Ekle" : "Masraf Düzenle")</h1>
+
+    @if (secilenArac != null)
+    {
+        <p>Araç: <strong>@secilenArac.Plaka - @secilenArac.Marka @secilenArac.Model</strong></p>
+    }
+
+    <EditForm Model="masraf" OnValidSubmit="Kaydet">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <p>
+            <label>Tarih:</label><br />
+            <InputDate @bind-Value="masraf.Tarih" />
+            <ValidationMessage For="@(() => masraf.Tarih)" />
+        </p>
+
+        <p>
+            <label>Masraf Tipi:</label><br />
+            <InputSelect @bind-Value="masraf.MasrafTipi">
+                @foreach (var tip in Enum.GetValues<MasrafTipi>())
+                {
+                    <option value="@tip">@tip</option>
+                }
+            </InputSelect>
+        </p>
+
+        <p>
+            <label>Tutar (₺):</label><br />
+            <InputNumber @bind-Value="masraf.Tutar" />
+            <ValidationMessage For="@(() => masraf.Tutar)" />
+        </p>
+
+        <p>
+            <label>Kilometre:</label><br />
+            @if (sonKilometre.HasValue)
+            {
+                <small style="color: gray;">Son kilometre: @sonKilometre.Value.ToString("N0") km (bu değerden düşük olamaz)</small><br />
+            }
+            <InputNumber @bind-Value="masraf.Kilometre" />
+            @if (!string.IsNullOrEmpty(kilometreHatasi))
+            {
+                <br /><span style="color: red;">@kilometreHatasi</span>
+            }
+        </p>
+
+        @if (masraf.MasrafTipi == MasrafTipi.Yakit)
+        {
+            <p>
+                <label>Litre:</label><br />
+                <InputNumber @bind-Value="masraf.Litre" />
+            </p>
+        }
+
+        <p>
+            <label>Açıklama:</label><br />
+            <InputTextArea @bind-Value="masraf.Aciklama" />
+        </p>
+
+        <p>
+            <button type="submit">Kaydet</button>
+            <a href="@GeriDonusUrl">İptal</a>
+        </p>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter]
+    public int? AracId { get; set; }
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    private Masraf masraf = new();
+    private Arac? secilenArac;
+    private int? sonKilometre;
+    private string? kilometreHatasi;
+    private string GeriDonusUrl => AracId.HasValue ? $"/arac-masraflar/{AracId}" : (masraf.AracId > 0 ? $"/arac-masraflar/{masraf.AracId}" : "/masraflar");
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var mevcutMasraf = await DbContext.Masraflar.FindAsync(Id.Value);
+            if (mevcutMasraf != null)
+            {
+                masraf = mevcutMasraf;
+                secilenArac = await DbContext.Araclar.FindAsync(masraf.AracId);
+            }
+        }
+        else if (AracId.HasValue)
+        {
+            masraf.AracId = AracId.Value;
+            secilenArac = await DbContext.Araclar.FindAsync(AracId.Value);
+        }
+
+        // Son kilometreyi çek
+        var aracIdForKm = AracId ?? masraf.AracId;
+        if (aracIdForKm > 0)
+        {
+            sonKilometre = await YakitService.GetSonKilometreAsync(aracIdForKm);
+        }
+    }
+
+    private async Task Kaydet()
+    {
+        // Kilometre doğrulaması
+        kilometreHatasi = null;
+        if (masraf.Kilometre.HasValue && sonKilometre.HasValue)
+        {
+            if (masraf.Kilometre.Value < sonKilometre.Value)
+            {
+                kilometreHatasi = $"Kilometre değeri son girilen kilometreden ({sonKilometre.Value:N0} km) düşük olamaz!";
+                return;
+            }
+        }
+
+        if (Id.HasValue)
+        {
+            DbContext.Masraflar.Update(masraf);
+        }
+        else
+        {
+            DbContext.Masraflar.Add(masraf);
+        }
+
+        await DbContext.SaveChangesAsync();
+        Navigation.NavigateTo(GeriDonusUrl);
+    }
+}

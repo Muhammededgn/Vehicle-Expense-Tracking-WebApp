@@ -1,0 +1,103 @@
+@page "/arac-ekle"
+@page "/arac-duzenle/{Id:int}"
+@using VehicleExpenseTrackingWebApp.Data
+@using VehicleExpenseTrackingWebApp.Models
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="page-arac-form">
+    <PageTitle>@(Id == null ? "Yeni Araç" : "Araç Düzenle")</PageTitle>
+
+    <h1>@(Id == null ? "Yeni Araç Ekle" : "Araç Düzenle")</h1>
+
+    <EditForm Model="arac" OnValidSubmit="Kaydet">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <p>
+            <label>Plaka:</label><br />
+            <InputText @bind-Value="arac.Plaka" />
+            <ValidationMessage For="@(() => arac.Plaka)" />
+        </p>
+
+        <p>
+            <label>Marka:</label><br />
+            <InputText @bind-Value="arac.Marka" />
+            <ValidationMessage For="@(() => arac.Marka)" />
+        </p>
+
+        <p>
+            <label>Model:</label><br />
+            <InputText @bind-Value="arac.Model" />
+            <ValidationMessage For="@(() => arac.Model)" />
+        </p>
+
+        <p>
+            <label>Yıl:</label><br />
+            <InputNumber @bind-Value="arac.Yil" />
+            <ValidationMessage For="@(() => arac.Yil)" />
+        </p>
+
+        <p>
+            <label>Kilometre:</label><br />
+            <InputNumber @bind-Value="arac.Kilometre" />
+            <ValidationMessage For="@(() => arac.Kilometre)" />
+        </p>
+
+        <p>
+            <label>Yakıt Tipi:</label><br />
+            <InputSelect @bind-Value="arac.YakitTipi">
+                @foreach (var tip in Enum.GetValues<YakitTipi>())
+                {
+                    <option value="@tip">@tip</option>
+                }
+            </InputSelect>
+        </p>
+
+        <p>
+            <label>Açıklama:</label><br />
+            <InputTextArea @bind-Value="arac.Aciklama" />
+        </p>
+
+        <p>
+            <button type="submit">Kaydet</button>
+            <a href="/araclar">İptal</a>
+        </p>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private Arac arac = new() { Yil = DateTime.Now.Year };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)
+        {
+            var mevcutArac = await DbContext.Araclar.FindAsync(Id.Value);
+            if (mevcutArac != null)
+            {
+                arac = mevcutArac;
+            }
+        }
+    }
+
+    private async Task Kaydet()
+    {
+        if (Id.HasValue)
+        {
+            DbContext.Araclar.Update(arac);
+        }
+        else
+        {
+            DbContext.Araclar.Add(arac);
+        }
+
+        await DbContext.SaveChangesAsync();
+        Navigation.NavigateTo("/araclar");
+    }
+}

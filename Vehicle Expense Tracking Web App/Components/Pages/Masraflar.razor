@@ -1,0 +1,316 @@
+@page "/arac-masraflar/{AracId:int}"
+@page "/masraflar"
+@using VehicleExpenseTrackingWebApp.Data
+@using VehicleExpenseTrackingWebApp.Models
+@using VehicleExpenseTrackingWebApp.Services
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DbContext
+@inject YakitTuketimiService YakitService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="page-masraflar">
+    <PageTitle>Masraflar</PageTitle>
+
+    <div class="page-header">
+        <div class="header-left">
+            <h1>Masraflar @(secilenArac != null ? $"- {secilenArac.Plaka}" : "")</h1>
+            @if (secilenArac != null && sonKilometre.HasValue)
+            {
+                <span class="son-km-badge">Son KM: @sonKilometre.Value.ToString("N0")</span>
+            }
+        </div>
+        <div class="header-actions">
+            @if (AracId.HasValue)
+            {
+                <button class="btn-primary" @onclick="YeniMasrafEkle">+ Yeni Masraf</button>
+                <button class="btn-secondary" @onclick="AraclaraGit">← Araçlara Dön</button>
+            }
+            else
+            {
+                <button class="btn-secondary" @onclick="AraclaraGit">Bir araç seçin</button>
+            }
+        </div>
+    </div>
+
+    <div class="filter-container">
+        <div class="filters">
+            <div class="filter-group">
+                <label>Masraf Tipi:</label>
+                <select @bind="selectedMasrafTipi" @bind:after="FiltreleVeYukle">
+                    <option value="">Tümü</option>
+                    @foreach (var tip in Enum.GetValues<MasrafTipi>())
+                    {
+                        <option value="@tip">@tip</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Başlangıç Tarihi:</label>
+                <input type="date" @bind="baslangicTarih" @bind:after="FiltreleVeYukle" />
+            </div>
+
+            <div class="filter-group">
+                <label>Bitiş Tarihi:</label>
+                <input type="date" @bind="bitisTarih" @bind:after="FiltreleVeYukle" />
+            </div>
+
+            <div class="filter-group">
+                <label>Min Tutar:</label>
+                <input type="number" @bind="minTutar" @bind:after="FiltreleVeYukle" placeholder="₺" />
+            </div>
+
+            <div class="filter-group">
+                <label>Max Tutar:</label>
+                <input type="number" @bind="maxTutar" @bind:after="FiltreleVeYukle" placeholder="₺" />
+            </div>
+
+            <button class="btn-clear" @onclick="FiltreleriTemizle">Temizle</button>
+        </div>
+    </div>
+
+    @if (yukleniyor)
+    {
+        <p class="loading">Yükleniyor...</p>
+    }
+    else if (filtrelenmismasraflar == null || !filtrelenmismasraflar.Any())
+    {
+        <div class="no-data">
+            <p>Masraf bulunamadı.</p>
+            @if (AracId.HasValue)
+            {
+                <button class="btn-primary" @onclick="YeniMasrafEkle">İlk Masrafı Ekleyin</button>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="data-grid-container">
+            <table class="data-grid">
+                <thead>
+                    <tr>
+                        @if (!AracId.HasValue)
+                        {
+                            <th>Plaka</th>
+                        }
+                        <th>Tarih</th>
+                        <th>Masraf Tipi</th>
+                        <th>Tutar (₺)</th>
+                        <th>Kilometre</th>
+                        <th>Lt/100km</th>
+                        <th>Açıklama</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var masraf in filtrelenmismasraflar)
+                    {
+                        <tr>
+                            @if (!AracId.HasValue)
+                            {
+                                <td class="plaka-cell">@masraf.Arac?.Plaka</td>
+                            }
+                            <td>@masraf.Tarih.ToString("dd.MM.yyyy")</td>
+                            <td><span class="masraf-badge @masraf.MasrafTipi.ToString().ToLower()">@masraf.MasrafTipi</span></td>
+                            <td class="number-cell tutar-cell">@masraf.Tutar.ToString("N2")</td>
+                            <td class="number-cell">@(masraf.Kilometre?.ToString("N0") ?? "-")</td>
+                            <td class="number-cell">
+                                @if (yakitTuketimleri.TryGetValue(masraf.Id, out var tuketim) && tuketim.HasValue)
+                                {
+                                    <span class="tuketim-value">@tuketim.Value.ToString("N2")</span>
+                                }
+                                else
+                                {
+                                    <span class="na">-</span>
+                                }
+                            </td>
+                            <td class="aciklama-cell">@(string.IsNullOrEmpty(masraf.Aciklama) ? "-" : masraf.Aciklama)</td>
+                            <td class="actions-cell">
+                                <button class="btn-action btn-edit" @onclick="() => Duzenle(masraf.Id)">Düzenle</button>
+                                <button class="btn-action btn-delete" @onclick="() => SilOnay(masraf)">Sil</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-bar">
+            <div class="summary-item">
+                <span class="summary-label">Toplam Masraf:</span>
+                <span class="summary-value">@filtrelenmismasraflar.Count adet</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Toplam Tutar:</span>
+                <span class="summary-value highlight">@filtrelenmismasraflar.Sum(m => m.Tutar).ToString("N2") ₺</span>
+            </div>
+        </div>
+    }
+
+    @if (silinecekMasraf != null)
+    {
+        <div class="modal-overlay">
+            <div class="confirmation-modal">
+                <h3>Masrafı Sil</h3>
+                <p>Bu masrafı silmek istediğinize emin misiniz?</p>
+                <p><strong>Tarih:</strong> @silinecekMasraf.Tarih.ToString("dd.MM.yyyy")</p>
+                <p><strong>Tutar:</strong> @silinecekMasraf.Tutar.ToString("N2") ₺</p>
+                <div class="modal-actions">
+                    <button class="btn-danger" @onclick="Sil">Evet, Sil</button>
+                    <button class="btn-secondary" @onclick="IptalSil">İptal</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int? AracId { get; set; }
+
+    private List<Masraf>? masraflar;
+    private List<Masraf>? filtrelenmismasraflar;
+    private Arac? secilenArac;
+    private Masraf? silinecekMasraf;
+    private int? sonKilometre;
+    private Dictionary<int, decimal?> yakitTuketimleri = new();
+    private bool yukleniyor = true;
+
+    private string? selectedMasrafTipi;
+    private DateTime? baslangicTarih;
+    private DateTime? bitisTarih;
+    private decimal? minTutar;
+    private decimal? maxTutar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await YukleMasraflar();
+    }
+
+    private async Task YukleMasraflar()
+    {
+        yukleniyor = true;
+
+        if (AracId.HasValue)
+        {
+            secilenArac = await DbContext.Araclar.FindAsync(AracId.Value);
+            masraflar = await DbContext.Masraflar
+                .Where(m => m.AracId == AracId.Value)
+                .OrderByDescending(m => m.Tarih)
+                .ToListAsync();
+            
+            sonKilometre = await YakitService.GetSonKilometreAsync(AracId.Value);
+            yakitTuketimleri = await YakitService.GetTumYakitTuketimleriAsync(AracId.Value);
+        }
+        else
+        {
+            masraflar = await DbContext.Masraflar
+                .Include(m => m.Arac)
+                .OrderByDescending(m => m.Tarih)
+                .ToListAsync();
+            
+            var aracIdler = masraflar.Select(m => m.AracId).Distinct().ToList();
+            foreach (var aracId in aracIdler)
+            {
+                var aracTuketimleri = await YakitService.GetTumYakitTuketimleriAsync(aracId);
+                foreach (var kvp in aracTuketimleri)
+                {
+                    yakitTuketimleri[kvp.Key] = kvp.Value;
+                }
+            }
+        }
+
+        Filtrele();
+        yukleniyor = false;
+    }
+
+    private void Filtrele()
+    {
+        if (masraflar == null)
+        {
+            filtrelenmismasraflar = null;
+            return;
+        }
+
+        var sonuc = masraflar.AsEnumerable();
+
+        if (!string.IsNullOrEmpty(selectedMasrafTipi) && Enum.TryParse<MasrafTipi>(selectedMasrafTipi, out var tip))
+        {
+            sonuc = sonuc.Where(m => m.MasrafTipi == tip);
+        }
+
+        if (baslangicTarih.HasValue)
+        {
+            sonuc = sonuc.Where(m => m.Tarih >= baslangicTarih.Value);
+        }
+        if (bitisTarih.HasValue)
+        {
+            sonuc = sonuc.Where(m => m.Tarih <= bitisTarih.Value);
+        }
+
+        if (minTutar.HasValue)
+        {
+            sonuc = sonuc.Where(m => m.Tutar >= minTutar.Value);
+        }
+        if (maxTutar.HasValue)
+        {
+            sonuc = sonuc.Where(m => m.Tutar <= maxTutar.Value);
+        }
+
+        filtrelenmismasraflar = sonuc.ToList();
+    }
+
+    private async Task FiltreleVeYukle()
+    {
+        Filtrele();
+        await Task.CompletedTask;
+    }
+
+    private async Task FiltreleriTemizle()
+    {
+        selectedMasrafTipi = null;
+        baslangicTarih = null;
+        bitisTarih = null;
+        minTutar = null;
+        maxTutar = null;
+        Filtrele();
+        await Task.CompletedTask;
+    }
+
+    private void YeniMasrafEkle()
+    {
+        Navigation.NavigateTo($"/masraf-ekle/{AracId}");
+    }
+
+    private void AraclaraGit()
+    {
+        Navigation.NavigateTo("/araclar");
+    }
+
+    private void Duzenle(int id)
+    {
+        Navigation.NavigateTo($"/masraf-duzenle/{id}");
+    }
+
+    private void SilOnay(Masraf masraf)
+    {
+        silinecekMasraf = masraf;
+    }
+
+    private void IptalSil()
+    {
+        silinecekMasraf = null;
+    }
+
+    private async Task Sil()
+    {
+        if (silinecekMasraf != null)
+        {
+            DbContext.Masraflar.Remove(silinecekMasraf);
+            await DbContext.SaveChangesAsync();
+            silinecekMasraf = null;
+            await YukleMasraflar();
+        }
+    }
+}

@@ -1,0 +1,1050 @@
+/* ==========================================================================
+   Global Layout & Utility
+   ========================================================================== */
+
+/* Global Typography */
+h1,
+h2,
+h3 {
+    border: none !important;
+    outline: none !important;
+    outline-width: 0 !important;
+    box-shadow: none !important;
+}
+
+h1 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem 0;
+}
+
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.sidebar {
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+.top-row {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.top-row a {
+    margin-left: 1.5rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.page-header h1 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.8rem;
+}
+
+/* Badges (Shared) */
+.yakit-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.yakit-badge.benzin {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.yakit-badge.lpg {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.yakit-badge.dizel {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.yakit-badge.elektrik {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.masraf-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.masraf-badge.yakit {
+    background: #fff3e0;
+    color: #e67e22;
+}
+
+.masraf-badge.bakim {
+    background: #e3f2fd;
+    color: #3498db;
+}
+
+.masraf-badge.sigorta {
+    background: #e8f5e9;
+    color: #27ae60;
+}
+
+.masraf-badge.muayene {
+    background: #ffebee;
+    color: #e74c3c;
+}
+
+.masraf-badge.lastik {
+    background: #f3e5f5;
+    color: #9b59b6;
+}
+
+.masraf-badge.yikama {
+    background: #e0f2f1;
+    color: #1abc9c;
+}
+
+.masraf-badge.diger {
+    background: #eceff1;
+    color: #7f8c8d;
+}
+
+/* Buttons (Shared) */
+.btn-primary {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-action {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    margin-right: 4px;
+    color: white;
+}
+
+.btn-edit {
+    background: #f1c40f;
+    color: #fff;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-delete {
+    background: #e74c3c;
+}
+
+.btn-expenses {
+    background: #2ecc71;
+}
+
+/* Data Grid (Shared) */
+.data-grid-container {
+    overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.data-grid {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.data-grid th {
+    background: #f8f9fa;
+    padding: 12px;
+    text-align: left;
+    color: #7f8c8d;
+    font-weight: 600;
+    border-bottom: 2px solid #eee;
+}
+
+.data-grid td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.data-grid tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.number-cell {
+    text-align: right;
+    font-family: 'Consolas', monospace;
+    font-weight: 500;
+}
+
+.clickable-row {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+/* Modal (Shared) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.confirmation-modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideIn 0.3s ease;
+}
+
+.confirmation-modal h3 {
+    margin-top: 0;
+    color: #e74c3c;
+}
+
+.modal-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ==========================================================================
+   Page: Home
+   ========================================================================== */
+.page-home .arac-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.page-home .arac-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    border: 1px solid #eee;
+}
+
+.page-home .arac-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.page-home .arac-card-header {
+    background: #34495e;
+    padding: 1rem;
+    text-align: center;
+}
+
+.page-home .plaka {
+    background: white;
+    color: #333;
+    padding: 4px 12px;
+    border-radius: 4px;
+    border: 2px solid #333;
+    font-family: 'Oswald', sans-serif;
+    font-weight: bold;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+}
+
+.page-home .arac-card-body {
+    padding: 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.page-home .marka-model {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.page-home .yil {
+    color: #7f8c8d;
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+}
+
+.page-home .arac-card-footer {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    background: #fcfcfc;
+}
+
+.page-home .stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-home .stat-label {
+    font-size: 0.75rem;
+    color: #95a5a6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.page-home .stat-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.page-home .add-card {
+    border: 2px dashed #bdc3c7;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.page-home .add-card:hover {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.page-home .add-card-content {
+    text-align: center;
+    color: #95a5a6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.page-home .add-icon {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.page-home .add-text {
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Page: Araclar
+   ========================================================================== */
+.page-araclar .search-filter-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+}
+
+.page-araclar .search-box input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.page-araclar .search-box input:focus {
+    border-color: #3498db;
+}
+
+.page-araclar .filters {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.page-araclar .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-araclar .filter-group label {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.page-araclar .filter-group input,
+.page-araclar .filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    min-width: 120px;
+}
+
+.page-araclar .summary-bar {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #e1f5fe;
+    border-radius: 6px;
+    color: #0277bd;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* ==========================================================================
+   Page: Masraflar
+   ========================================================================== */
+.page-masraflar .filter-container {
+    margin-bottom: 1.5rem;
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.page-masraflar .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.page-masraflar .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.page-masraflar .filter-group input,
+.page-masraflar .filter-group select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.page-masraflar .btn-clear {
+    background: none;
+    border: 1px solid #ddd;
+    color: #666;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.page-masraflar .btn-clear:hover {
+    background: #f5f5f5;
+}
+
+.page-masraflar .son-km-badge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-left: 1rem;
+}
+
+.page-masraflar .tuketim-value {
+    color: #e67e22;
+    font-weight: bold;
+}
+
+.page-masraflar .na {
+    color: #bdc3c7;
+    font-size: 0.8rem;
+}
+
+.page-masraflar .header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.page-masraflar .summary-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-top: 3px solid #3498db;
+}
+
+.page-masraflar .summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.page-masraflar .summary-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.page-masraflar .summary-value.highlight {
+    color: #27ae60;
+    font-size: 1.4rem;
+}
+
+/* ==========================================================================
+   Page: Raporlar
+   ========================================================================== */
+.page-raporlar .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.page-raporlar .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid;
+}
+
+.page-raporlar .stat-card.blue {
+    border-color: #3498db;
+}
+
+.page-raporlar .stat-card.green {
+    border-color: #27ae60;
+}
+
+.page-raporlar .stat-card.orange {
+    border-color: #f39c12;
+}
+
+.page-raporlar .stat-card.purple {
+    border-color: #9b59b6;
+}
+
+.page-raporlar .stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-raporlar .stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.page-raporlar .stat-label {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.page-raporlar .filter-section {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.page-raporlar .reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.page-raporlar .report-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.page-raporlar .report-card.wide {
+    grid-column: 1 / -1;
+}
+
+.page-raporlar .report-card h3 {
+    margin: 0 0 1.5rem 0;
+    color: #34495e;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.page-raporlar .bar-chart {
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding-top: 20px;
+}
+
+.page-raporlar .bar-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.page-raporlar .bar {
+    width: 100%;
+    background: #3498db;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    min-height: 2px;
+    transition: height 0.5s ease;
+}
+
+.page-raporlar .bar:hover {
+    opacity: 0.8;
+}
+
+.page-raporlar .bar-value {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: #2c3e50;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.page-raporlar .bar-label {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+}
+
+.page-raporlar .legend-item {
+    margin-bottom: 0.8rem;
+}
+
+.page-raporlar .legend-bar {
+    height: 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+}
+
+.page-raporlar .legend-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+}
+
+.page-raporlar .legend-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.page-raporlar .mini-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.page-raporlar .mini-table th {
+    text-align: left;
+    color: #95a5a6;
+    font-size: 0.85rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.page-raporlar .mini-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid #f9f9f9;
+    color: #34495e;
+}
+
+.page-raporlar .mini-table .rank {
+    color: #bdc3c7;
+    font-weight: bold;
+    width: 30px;
+}
+
+.page-raporlar .mini-table .plaka {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+}
+
+.page-raporlar .mini-table .money {
+    font-family: 'Consolas', monospace;
+    text-align: right;
+}
+
+.page-raporlar .mini-table .center {
+    text-align: center;
+}
+
+.page-raporlar .yearly-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.page-raporlar .yearly-item .year {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #3498db;
+}
+
+.page-raporlar .yearly-details {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+}
+
+.page-raporlar .yearly-details .amount {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* ==========================================================================
+   Page: Karsilastirma
+   ========================================================================== */
+.page-karsilastirma .selection-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.page-karsilastirma .select-box {
+    flex: 1;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.page-karsilastirma .select-box label {
+    font-weight: 600;
+    color: #7f8c8d;
+}
+
+.page-karsilastirma .select-box select {
+    padding: 10px;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    font-size: 1rem;
+    width: 100%;
+}
+
+.page-karsilastirma .vs-badge {
+    background: #e74c3c;
+    color: white;
+    font-weight: 900;
+    font-style: italic;
+    font-size: 1.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+}
+
+.page-karsilastirma .comparison-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.page-karsilastirma .comparison-section {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.page-karsilastirma .comparison-section h3 {
+    background: #f8f9fa;
+    margin: 0;
+    padding: 1rem;
+    font-size: 1rem;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.page-karsilastirma .comparison-row {
+    display: flex;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.page-karsilastirma .comparison-row:last-child {
+    border-bottom: none;
+}
+
+.page-karsilastirma .comparison-row .cell {
+    flex: 1;
+    padding: 1rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.page-karsilastirma .comparison-row .cell.label {
+    flex: 0 0 200px;
+    background: #fafafa;
+    color: #95a5a6;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-left: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+}
+
+.page-karsilastirma .comparison-row .cell.money {
+    font-family: 'Consolas', monospace;
+}
+
+.page-karsilastirma .comparison-row.header-row .cell {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.page-karsilastirma .comparison-row.winner1 .cell:first-child {
+    background: #e8f5e9;
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.page-karsilastirma .comparison-row.winner2 .cell:last-child {
+    background: #e8f5e9;
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.page-karsilastirma .result-cards {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.page-karsilastirma .result-card {
+    background: #fff;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    width: 250px;
+    position: relative;
+    opacity: 0.6;
+    filter: grayscale(1);
+    transition: all 0.3s;
+}
+
+.page-karsilastirma .result-card.winner {
+    border-color: #27ae60;
+    opacity: 1;
+    filter: grayscale(0);
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(39, 174, 96, 0.15);
+}
+
+.page-karsilastirma .winner-badge {
+    background: #27ae60;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.page-karsilastirma .result-plaka {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.page-karsilastirma .result-stat {
+    display: block;
+    font-size: 1.5rem;
+    color: #27ae60;
+    font-weight: 900;
+}
+
+/* ==========================================================================
+   Page: Forms (AracForm, MasrafForm)
+   ========================================================================== */
+.page-arac-form,
+.page-masraf-form {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.page-arac-form p,
+.page-masraf-form p {
+    margin-bottom: 1.5rem;
+}
+
+.page-arac-form label,
+.page-masraf-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #34495e;
+    font-weight: 500;
+}
+
+.page-arac-form input,
+.page-masraf-form input,
+.page-arac-form select,
+.page-masraf-form select,
+.page-arac-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dfe6e9;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.page-arac-form input:focus,
+.page-masraf-form input:focus,
+.page-arac-form select:focus,
+.page-masraf-form select:focus,
+.page-arac-form textarea:focus {
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.page-arac-form button[type="submit"],
+.page-masraf-form button[type="submit"] {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.page-arac-form button[type="submit"]:hover,
+.page-masraf-form button[type="submit"]:hover {
+    background: #219150;
+}
+
+.page-arac-form a,
+.page-masraf-form a {
+    margin-left: 1rem;
+    color: #7f8c8d;
+    text-decoration: none;
+}
+
+.page-arac-form a:hover,
+.page-masraf-form a:hover {
+    text-decoration: underline;
+}
+
+.validation-message {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: block;
+}

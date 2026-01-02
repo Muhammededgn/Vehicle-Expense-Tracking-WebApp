@@ -1,0 +1,252 @@
+@page "/raporlar"
+@using VehicleExpenseTrackingWebApp.Data
+@using VehicleExpenseTrackingWebApp.Models
+@using VehicleExpenseTrackingWebApp.Services
+@using Microsoft.EntityFrameworkCore
+@inject RaporIstatistikService RaporService
+@inject AppDbContext DbContext
+@rendermode InteractiveServer
+
+<div class="page-raporlar">
+    <PageTitle>Raporlar ve İstatistikler</PageTitle>
+
+    <div class="page-header">
+        <h1>Raporlar ve İstatistikler</h1>
+    </div>
+
+    @if (yukleniyor)
+    {
+        <p class="loading">Veriler yükleniyor...</p>
+    }
+    else
+    {
+        <div class="stats-cards">
+            <div class="stat-card blue">
+                <div class="stat-info">
+                    <span class="stat-value">@genelOzet?.ToplamArac</span>
+                    <span class="stat-label">Toplam Araç</span>
+                </div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-info">
+                    <span class="stat-value">@genelOzet?.ToplamMasraf</span>
+                    <span class="stat-label">Toplam Masraf</span>
+                </div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-info">
+                    <span class="stat-value">@genelOzet?.ToplamHarcama.ToString("N0") ₺</span>
+                    <span class="stat-label">Toplam Harcama</span>
+                </div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-info">
+                    <span class="stat-value">@genelOzet?.OrtalamaMasraf.ToString("N0") ₺</span>
+                    <span class="stat-label">Ortalama Masraf</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <label>Araç Filtresi:</label>
+            <select @bind="selectedAracId" @bind:after="AracSecildi">
+                <option value="">Tüm Araçlar</option>
+                @foreach (var arac in araclar)
+                {
+                    <option value="@arac.Id">@arac.Plaka - @arac.Marka @arac.Model</option>
+                }
+            </select>
+
+            <label>Yıl:</label>
+            <select @bind="selectedYil" @bind:after="YilSecildi">
+                @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                {
+                    <option value="@y">@y</option>
+                }
+            </select>
+        </div>
+
+        <div class="reports-grid">
+            <div class="report-card">
+                <h3>Aylık Masraf Özeti (@selectedYil)</h3>
+                <div class="bar-chart">
+                    @if (aylikOzet != null && aylikOzet.Any())
+                    {
+                        var maxTutar = aylikOzet.Max(a => a.ToplamTutar);
+                        @foreach (var ay in aylikOzet)
+                        {
+                            var height = maxTutar > 0 ? (ay.ToplamTutar / maxTutar) * 100 : 0;
+                            <div class="bar-item">
+                                <div class="bar" style="height: @height.ToString("0")%">
+                                    @if (ay.ToplamTutar > 0)
+                                    {
+                                        <span class="bar-value">@ay.ToplamTutar.ToString("N0")</span>
+                                    }
+                                </div>
+                                <span class="bar-label">@ay.AyAdi.Substring(0, 3)</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="no-data-text">Bu yıl için veri yok</p>
+                    }
+                </div>
+            </div>
+
+            <div class="report-card">
+                <h3>Masraf Tipi Dağılımı</h3>
+                <div class="pie-legend">
+                    @if (masrafDagilim != null && masrafDagilim.Any())
+                    {
+                        @foreach (var item in masrafDagilim)
+                        {
+                            <div class="legend-item">
+                                <div class="legend-bar" style="width: @item.Yuzde.ToString("0")%; background: @GetMasrafColor(item.MasrafTipi)"></div>
+                                <div class="legend-info">
+                                    <span class="legend-label">@item.MasrafTipi</span>
+                                    <span class="legend-value">@item.ToplamTutar.ToString("N0") ₺ (%@item.Yuzde.ToString("0"))</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="no-data-text">Veri yok</p>
+                    }
+                </div>
+            </div>
+
+            <div class="report-card wide">
+                <h3>En Masraflı Araçlar</h3>
+                <table class="mini-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Plaka</th>
+                            <th>Araç</th>
+                            <th>Masraf Sayısı</th>
+                            <th>Toplam Masraf</th>
+                            <th>Ortalama</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (aracMasrafOzet != null)
+                        {
+                            var sira = 1;
+                            @foreach (var arac in aracMasrafOzet.Take(5))
+                            {
+                                <tr>
+                                    <td class="rank">@sira</td>
+                                    <td class="plaka">@arac.Plaka</td>
+                                    <td>@arac.Marka @arac.Model</td>
+                                    <td class="center">@arac.MasrafSayisi</td>
+                                    <td class="money">@arac.ToplamMasraf.ToString("N0") ₺</td>
+                                    <td class="money">@arac.OrtalamaMasraf.ToString("N0") ₺</td>
+                                </tr>
+                                sira++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="report-card">
+                <h3>Yıllık Karşılaştırma</h3>
+                <div class="yearly-list">
+                    @if (yillikKarsilastirma != null && yillikKarsilastirma.Any())
+                    {
+                        @foreach (var yil in yillikKarsilastirma)
+                        {
+                            <div class="yearly-item">
+                                <span class="year">@yil.Yil</span>
+                                <div class="yearly-details">
+                                    <span class="amount">@yil.ToplamTutar.ToString("N0") ₺</span>
+                                    <span class="count">@yil.MasrafSayisi masraf</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="no-data-text">Veri yok</p>
+                    }
+                </div>
+            </div>
+
+            <div class="report-card">
+                <h3>İstatistik Özeti</h3>
+                <div class="stats-list">
+                    <div class="stats-item">
+                        <span class="stats-label">En Yüksek Masraf</span>
+                        <span class="stats-value red">@genelOzet?.EnYuksekMasraf.ToString("N0") ₺</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">En Düşük Masraf</span>
+                        <span class="stats-value green">@genelOzet?.EnDusukMasraf.ToString("N0") ₺</span>
+                    </div>
+                    <div class="stats-item">
+                        <span class="stats-label">Ortalama Masraf</span>
+                        <span class="stats-value">@genelOzet?.OrtalamaMasraf.ToString("N0") ₺</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool yukleniyor = true;
+    private GenelOzet? genelOzet;
+    private List<AylikMasrafOzet>? aylikOzet;
+    private List<MasrafTipiDagilim>? masrafDagilim;
+    private List<AracMasrafOzet>? aracMasrafOzet;
+    private List<YillikKarsilastirma>? yillikKarsilastirma;
+    private List<Arac> araclar = new();
+    
+    private int? selectedAracId;
+    private int selectedYil = DateTime.Now.Year;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await YukleVeriler();
+    }
+
+    private async Task YukleVeriler()
+    {
+        yukleniyor = true;
+        
+        araclar = await DbContext.Araclar.ToListAsync();
+        genelOzet = await RaporService.GetGenelOzetAsync();
+        aylikOzet = await RaporService.GetAylikMasrafOzetAsync(selectedAracId, selectedYil);
+        masrafDagilim = await RaporService.GetMasrafTipiDagilimAsync(selectedAracId);
+        aracMasrafOzet = await RaporService.GetAracMasrafOzetAsync();
+        yillikKarsilastirma = await RaporService.GetYillikKarsilastirmaAsync(selectedAracId);
+        
+        yukleniyor = false;
+    }
+
+    private async Task AracSecildi()
+    {
+        await YukleVeriler();
+    }
+
+    private async Task YilSecildi()
+    {
+        aylikOzet = await RaporService.GetAylikMasrafOzetAsync(selectedAracId, selectedYil);
+    }
+
+    private string GetMasrafColor(MasrafTipi tip)
+    {
+        return tip switch
+        {
+            MasrafTipi.Yakit => "#f39c12",
+            MasrafTipi.Bakim => "#3498db",
+            MasrafTipi.Sigorta => "#27ae60",
+            MasrafTipi.Muayene => "#e74c3c",
+            MasrafTipi.Lastik => "#9b59b6",
+            MasrafTipi.Yikama => "#1abc9c",
+            _ => "#95a5a6"
+        };
+    }
+}

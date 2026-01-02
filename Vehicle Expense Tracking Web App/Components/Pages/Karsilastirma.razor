@@ -1,0 +1,221 @@
+@page "/karsilastirma"
+@using VehicleExpenseTrackingWebApp.Data
+@using VehicleExpenseTrackingWebApp.Models
+@using VehicleExpenseTrackingWebApp.Services
+@using Microsoft.EntityFrameworkCore
+@inject KarsilastirmaService KarsilastirmaService
+@inject AppDbContext DbContext
+@rendermode InteractiveServer
+
+<div class="page-karsilastirma">
+    <PageTitle>Araç Karşılaştırma</PageTitle>
+
+    <div class="page-header">
+        <h1>Araç Karşılaştırma</h1>
+        <p class="subtitle">İki aracı yan yana karşılaştırın</p>
+    </div>
+
+    <div class="selection-panel">
+        <div class="select-box">
+            <label>1. Araç</label>
+            <select @bind="arac1Id" @bind:after="Karsilastir">
+                <option value="0">Araç seçin...</option>
+                @foreach (var arac in araclar.Where(a => a.AracId != arac2Id))
+                {
+                    <option value="@arac.AracId">@arac.Plaka - @arac.Marka @arac.Model (@arac.Yil)</option>
+                }
+            </select>
+        </div>
+        
+        <div class="vs-badge">VS</div>
+        
+        <div class="select-box">
+            <label>2. Araç</label>
+            <select @bind="arac2Id" @bind:after="Karsilastir">
+                <option value="0">Araç seçin...</option>
+                @foreach (var arac in araclar.Where(a => a.AracId != arac1Id))
+                {
+                    <option value="@arac.AracId">@arac.Plaka - @arac.Marka @arac.Model (@arac.Yil)</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (sonuc != null)
+    {
+        <div class="comparison-container">
+            <div class="comparison-section">
+                <h3>Araç Bilgileri</h3>
+                <div class="comparison-row header-row">
+                    <div class="cell arac1">@sonuc.Arac1.Plaka</div>
+                    <div class="cell label">Plaka</div>
+                    <div class="cell arac2">@sonuc.Arac2.Plaka</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell">@sonuc.Arac1.Marka @sonuc.Arac1.Model</div>
+                    <div class="cell label">Araç</div>
+                    <div class="cell">@sonuc.Arac2.Marka @sonuc.Arac2.Model</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell">@sonuc.Arac1.Yil</div>
+                    <div class="cell label">Model Yılı</div>
+                    <div class="cell">@sonuc.Arac2.Yil</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell"><span class="badge @sonuc.Arac1.YakitTipi.ToString().ToLower()">@sonuc.Arac1.YakitTipi</span></div>
+                    <div class="cell label">Yakıt Tipi</div>
+                    <div class="cell"><span class="badge @sonuc.Arac2.YakitTipi.ToString().ToLower()">@sonuc.Arac2.YakitTipi</span></div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h3>Kilometre Bilgileri</h3>
+                @{
+                    var kmWinner = sonuc.Arac1.GidilenKm > sonuc.Arac2.GidilenKm ? 1 : (sonuc.Arac2.GidilenKm > sonuc.Arac1.GidilenKm ? 2 : 0);
+                }
+                <div class="comparison-row">
+                    <div class="cell">@sonuc.Arac1.BaslangicKm.ToString("N0") km</div>
+                    <div class="cell label">Başlangıç KM</div>
+                    <div class="cell">@sonuc.Arac2.BaslangicKm.ToString("N0") km</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell">@sonuc.Arac1.SonKm.ToString("N0") km</div>
+                    <div class="cell label">Son KM</div>
+                    <div class="cell">@sonuc.Arac2.SonKm.ToString("N0") km</div>
+                </div>
+                <div class="comparison-row @(kmWinner == 1 ? "winner1" : kmWinner == 2 ? "winner2" : "")">
+                    <div class="cell highlight">@sonuc.Arac1.GidilenKm.ToString("N0") km</div>
+                    <div class="cell label">Gidilen KM</div>
+                    <div class="cell highlight">@sonuc.Arac2.GidilenKm.ToString("N0") km</div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h3>Masraf Özeti</h3>
+                @{
+                    var masrafWinner = sonuc.Arac1.ToplamMasraf < sonuc.Arac2.ToplamMasraf ? 1 : (sonuc.Arac2.ToplamMasraf < sonuc.Arac1.ToplamMasraf ? 2 : 0);
+                }
+                <div class="comparison-row @(masrafWinner == 1 ? "winner1" : masrafWinner == 2 ? "winner2" : "")">
+                    <div class="cell money">@sonuc.Arac1.ToplamMasraf.ToString("N0") ₺</div>
+                    <div class="cell label">Toplam Masraf</div>
+                    <div class="cell money">@sonuc.Arac2.ToplamMasraf.ToString("N0") ₺</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell">@sonuc.Arac1.MasrafSayisi</div>
+                    <div class="cell label">Masraf Sayısı</div>
+                    <div class="cell">@sonuc.Arac2.MasrafSayisi</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell money">@sonuc.Arac1.YakitMasrafi.ToString("N0") ₺</div>
+                    <div class="cell label">Yakıt Masrafı</div>
+                    <div class="cell money">@sonuc.Arac2.YakitMasrafi.ToString("N0") ₺</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell money">@sonuc.Arac1.BakimMasrafi.ToString("N0") ₺</div>
+                    <div class="cell label">Bakım Masrafı</div>
+                    <div class="cell money">@sonuc.Arac2.BakimMasrafi.ToString("N0") ₺</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell money">@sonuc.Arac1.SigortaMasrafi.ToString("N0") ₺</div>
+                    <div class="cell label">Sigorta Masrafı</div>
+                    <div class="cell money">@sonuc.Arac2.SigortaMasrafi.ToString("N0") ₺</div>
+                </div>
+            </div>
+
+            <div class="comparison-section">
+                <h3>Verimlilik Analizi</h3>
+                @{
+                    var kmMaliyetWinner = sonuc.Arac1.KmBasinaMaliyet < sonuc.Arac2.KmBasinaMaliyet && sonuc.Arac1.KmBasinaMaliyet > 0 ? 1 : 
+                                         (sonuc.Arac2.KmBasinaMaliyet < sonuc.Arac1.KmBasinaMaliyet && sonuc.Arac2.KmBasinaMaliyet > 0 ? 2 : 0);
+                    var yakitWinner = sonuc.Arac1.OrtalamaYakitTuketimi < sonuc.Arac2.OrtalamaYakitTuketimi && sonuc.Arac1.OrtalamaYakitTuketimi > 0 ? 1 : 
+                                     (sonuc.Arac2.OrtalamaYakitTuketimi < sonuc.Arac1.OrtalamaYakitTuketimi && sonuc.Arac2.OrtalamaYakitTuketimi > 0 ? 2 : 0);
+                }
+                <div class="comparison-row @(kmMaliyetWinner == 1 ? "winner1" : kmMaliyetWinner == 2 ? "winner2" : "")">
+                    <div class="cell highlight">@(sonuc.Arac1.KmBasinaMaliyet > 0 ? sonuc.Arac1.KmBasinaMaliyet.ToString("N2") + " ₺/km" : "-")</div>
+                    <div class="cell label">KM Başına Maliyet</div>
+                    <div class="cell highlight">@(sonuc.Arac2.KmBasinaMaliyet > 0 ? sonuc.Arac2.KmBasinaMaliyet.ToString("N2") + " ₺/km" : "-")</div>
+                </div>
+                <div class="comparison-row @(yakitWinner == 1 ? "winner1" : yakitWinner == 2 ? "winner2" : "")">
+                    <div class="cell highlight">@(sonuc.Arac1.OrtalamaYakitTuketimi.HasValue ? sonuc.Arac1.OrtalamaYakitTuketimi.Value.ToString("N2") + " Lt/100km" : "-")</div>
+                    <div class="cell label">Ort. Yakıt Tüketimi</div>
+                    <div class="cell highlight">@(sonuc.Arac2.OrtalamaYakitTuketimi.HasValue ? sonuc.Arac2.OrtalamaYakitTuketimi.Value.ToString("N2") + " Lt/100km" : "-")</div>
+                </div>
+                <div class="comparison-row">
+                    <div class="cell">@sonuc.Arac1.ToplamLitre.ToString("N0") Lt</div>
+                    <div class="cell label">Toplam Yakıt</div>
+                    <div class="cell">@sonuc.Arac2.ToplamLitre.ToString("N0") Lt</div>
+                </div>
+            </div>
+
+            <div class="result-summary">
+                <h3>Değerlendirme</h3>
+                <div class="result-cards">
+                    <div class="result-card @(GetKazanan() == 1 ? "winner" : "")">
+                        <span class="result-plaka">@sonuc.Arac1.Plaka</span>
+                        @if (GetKazanan() == 1)
+                        {
+                            <span class="winner-badge">Daha Ekonomik!</span>
+                        }
+                        <span class="result-stat">@sonuc.Arac1.KmBasinaMaliyet.ToString("N2") ₺/km</span>
+                    </div>
+                    <div class="result-card @(GetKazanan() == 2 ? "winner" : "")">
+                        <span class="result-plaka">@sonuc.Arac2.Plaka</span>
+                        @if (GetKazanan() == 2)
+                        {
+                            <span class="winner-badge">Daha Ekonomik!</span>
+                        }
+                        <span class="result-stat">@sonuc.Arac2.KmBasinaMaliyet.ToString("N2") ₺/km</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (arac1Id > 0 || arac2Id > 0)
+    {
+        <p class="info-text">Karşılaştırma için iki araç seçin.</p>
+    }
+    else
+    {
+        <div class="empty-state">
+            <span class="empty-icon"></span>
+            <p>Karşılaştırma yapmak için yukarıdan iki araç seçin.</p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<AracKarsilastirmaDetay> araclar = new();
+    private int arac1Id;
+    private int arac2Id;
+    private KarsilastirmaSonuc? sonuc;
+
+    protected override async Task OnInitializedAsync()
+    {
+        araclar = await KarsilastirmaService.GetTumAraclarAsync();
+    }
+
+    private async Task Karsilastir()
+    {
+        if (arac1Id > 0 && arac2Id > 0)
+        {
+            sonuc = await KarsilastirmaService.KarsilastirAsync(arac1Id, arac2Id);
+        }
+        else
+        {
+            sonuc = null;
+        }
+    }
+
+    private int GetKazanan()
+    {
+        if (sonuc == null) return 0;
+        
+        if (sonuc.Arac1.KmBasinaMaliyet > 0 && sonuc.Arac2.KmBasinaMaliyet > 0)
+        {
+            if (sonuc.Arac1.KmBasinaMaliyet < sonuc.Arac2.KmBasinaMaliyet) return 1;
+            if (sonuc.Arac2.KmBasinaMaliyet < sonuc.Arac1.KmBasinaMaliyet) return 2;
+        }
+        
+        return 0;
+    }
+}
